@@ -1,0 +1,11 @@
+{
+  "name": "shop-react-redux-cloudfront-be",
+  "version": "1.0.0",
+  "description": "Backend for shop application implemented using AWS and Serverless framework",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Hayk Margaryan",
+  "license": "ISC"
+}
