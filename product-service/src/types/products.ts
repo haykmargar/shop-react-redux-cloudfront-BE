@@ -6,7 +6,12 @@ export interface ProductInterface {
     image: string
 }
 
+export interface ProductDataInterface {
+    product: ProductInterface;
+    count: number;
+}
+
 export interface ProductServiceAPIInterface {
     getProductById: (id: string) => Promise<ProductInterface>;
-    getProductsList: () => Promise<ProductInterface[]>;
+    getProductsList: () => Promise<ProductDataInterface[]>;
 }
