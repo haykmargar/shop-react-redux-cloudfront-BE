@@ -28,7 +28,7 @@ export const getProductByIdHandler = () => async (event: APIGatewayProxyEvent, _
             title: productData.Item.title.S,
             description: productData.Item.description.S,
             price: parseFloat(productData.Item.price.N),
-            image: parseFloat(productData.Item.image.S),
+            image: productData.Item.image.S,
         };
 
         return successResponse({ product });
