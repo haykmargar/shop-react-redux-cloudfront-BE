@@ -4,35 +4,36 @@ import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 
 const dynamoDB = new AWS.DynamoDB();
 
-export const getProductByIdHandler = () => async (event: APIGatewayProxyEvent, _context: Context) => {
+export const getProductByIdHandler =
+  () => async (event: APIGatewayProxyEvent, _context: Context) => {
     try {
-        const { productId = '' } = event.pathParameters;
-        const params = {
-            TableName: 'products',
-            Key: {
-                'id': { S: productId },
-            },
-        };
+      const { productId = '' } = event.pathParameters;
+      const params = {
+        TableName: 'products',
+        Key: {
+          id: { S: productId },
+        },
+      };
 
-        const productData = await dynamoDB.getItem(params).promise();
+      const productData = await dynamoDB.getItem(params).promise();
 
-        if (!productData.Item) {
-            return successResponse(
-                { message: `Product with id ${productId} not found` },
-                404,
-            );
-        }
+      if (!productData.Item) {
+        return successResponse(
+          { message: `Product with id ${productId} not found` },
+          404,
+        );
+      }
 
-        const product = {
-            id: productData.Item.id.S,
-            title: productData.Item.title.S,
-            description: productData.Item.description.S,
-            price: parseFloat(productData.Item.price.N),
-            image: productData.Item.image.S,
-        };
+      const product = {
+        id: productData.Item.id.S,
+        title: productData.Item.title.S,
+        description: productData.Item.description.S,
+        price: parseFloat(productData.Item.price.N),
+        image: productData.Item.image.S,
+      };
 
-        return successResponse({ product });
+      return successResponse({ product });
     } catch (err) {
-        return errorResponse(err);
+      return errorResponse(err);
     }
-};
+  };
