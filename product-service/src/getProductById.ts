@@ -1,24 +1,39 @@
 import { errorResponse, successResponse } from './utils/apiResponseBuilder';
-import products from './mocks/products-data.json';
+import AWS from 'aws-sdk';
 import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 
-export const getProductByIdHandler = () => async (event: APIGatewayProxyEvent, _context: Context) => {
+const dynamoDB = new AWS.DynamoDB();
+
+export const getProductByIdHandler =
+  () => async (event: APIGatewayProxyEvent, _context: Context) => {
     try {
+      const { productId = '' } = event.pathParameters;
+      const params = {
+        TableName: 'products',
+        Key: {
+          id: { S: productId },
+        },
+      };
 
-        const { productId = '' } = event.pathParameters;
-        const productsData = products.find(
-            (product) => product.id === productId,
+      const productData = await dynamoDB.getItem(params).promise();
+
+      if (!productData.Item) {
+        return successResponse(
+          { message: `Product with id ${productId} not found` },
+          404,
         );
+      }
 
-        if (!productsData) {
-            return successResponse(
-                { message: `Product with id ${productId} does not exist` },
-                404,
-            );
-        }
+      const product = {
+        id: productData.Item.id.S,
+        title: productData.Item.title.S,
+        description: productData.Item.description.S,
+        price: parseFloat(productData.Item.price.N),
+        image: productData.Item.image.S,
+      };
 
-        return successResponse({ productsData });
+      return successResponse({ product });
     } catch (err) {
-        return errorResponse(err);
+      return errorResponse(err);
     }
-};
+  };
