@@ -12,6 +12,11 @@ provider:
     ENV_STAGE: ${opt:stage, 'dev'}
     PRODUCTS_TABLE: ${self:resources.Resources.ProductsTable.Properties.TableName}
     STOCK_TABLE: ${self:resources.Resources.StockTable.Properties.TableName}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - sqs:SendMessage
+      Resource: '*'
 
 plugins:
   - serverless-webpack
@@ -51,6 +56,32 @@ resources:
           ReadCapacityUnits: 5
           WriteCapacityUnits: 5
 
+    CatalogItemsQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: catalogItemsQueue
+    CreateProductTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        DisplayName: Create Product Topic
+        TopicName: createProductTopic
+
+    ProductEmailSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Protocol: email
+        TopicArn: !Ref CreateProductTopic
+        Endpoint: hayk_margaryan1@epam.com
+
+    FilteredProductEmailSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Protocol: email
+        TopicArn: !Ref CreateProductTopic
+        Endpoint: hayk.margaryan87@gmail.com
+        FilterPolicy:
+          price: [300, 499]
+
 functions:
   getProductsList:
     handler: handler.getProductsList
@@ -79,3 +110,16 @@ functions:
           path: products
           method: post
           cors: true
+
+  catalogBatchProcess:
+    handler: handler.catalogBatchProcess
+    environment:
+      CONNECTION_STR: ''
+      SNS_TOPIC_ARN: !Ref CreateProductTopic
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - CatalogItemsQueue
+              - Arn
+          batchSize: 5
