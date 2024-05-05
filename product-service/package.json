@@ -9,7 +9,7 @@
     "format": "prettier --write .",
     "deploy:populate-tables": "ts-node src/services/dynamoDB-product-service.ts",
     "deploy:dev": "sls deploy --stage dev && npm run deploy:populate-tables",
-    "remove:dev-stack": "sls remove --stage dev --region us-east-1"
+    "remove:dev-stack": "sls remove --stage dev --region eu-central-1"
   },
   "author": "Hayk Margaryan",
   "license": "ISC",
