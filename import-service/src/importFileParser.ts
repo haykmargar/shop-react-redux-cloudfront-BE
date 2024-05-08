@@ -6,6 +6,8 @@ import { errorResponse } from './utils/apiResponseBuilder';
 import { S3Event } from 'aws-lambda';
 
 const s3 = new AWS.S3();
+const sqs = new AWS.SQS();
+const sqsQueueUrl = '';
 
 export const importFileParserHandler = () => async (event: S3Event) => {
   try {
@@ -31,11 +33,23 @@ export const importFileParserHandler = () => async (event: S3Event) => {
     readableStream.push(null);
 
     const records = [];
-    readableStream
-      .pipe(csvParser())
-      .on('data', (data) => records.push(data))
+      readableStream.pipe(csvParser())
+      .on('data', async (data) => {
+          try {
+              const params = {
+                  QueueUrl: sqsQueueUrl,
+                  MessageBody: JSON.stringify(data),
+              };
+              await sqs.sendMessage(params).promise();
+              records.push(data);
+              winstonLogger.logRequest(`Sent message to SQS: ${JSON.stringify(data)}`);
+          } catch (error) {
+              winstonLogger.logError(`Error sending message to SQS: ${error.message}`);
+              throw error;
+          }
+      })
       .on('end', async () => {
-        winstonLogger.logRequest(`Parsed records: ${records}`);
+        winstonLogger.logRequest(`Parsed records: ${JSON.stringify(records, null, 2)}`);
 
         const newObjectKey = objectKey.replace('uploaded/', 'parsed/');
         await s3
@@ -49,7 +63,7 @@ export const importFileParserHandler = () => async (event: S3Event) => {
         winstonLogger.logRequest(`File ${objectKey} moved to 'parsed' folder.`);
       });
   } catch (error) {
-    winstonLogger.logError(`Error: ${error}`);
+    winstonLogger.logError(`Error: ${error.message}`);
     return errorResponse(error, 500);
   }
 };
