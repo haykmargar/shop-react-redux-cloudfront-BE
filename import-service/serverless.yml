@@ -41,6 +41,7 @@ functions:
             parameters:
               querystrings:
                 name: true
+          authorizer: arn:aws:lambda:eu-central-1:975050097882:function:authorization-service-dev-basicAuthorizer
 
   importFileParser:
     handler: handler.importFileParser
